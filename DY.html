@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dividend Yield Calculator</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    :root {
+        --green: #16a34a;
+        --green-soft: #f0fdf4;
+        --text: #111827;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --bg: #fafafa;
+        --white: #ffffff;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 30px 20px;
+    }
+
+    .calculator {
+        width: 100%;
+        max-width: 430px;
+    }
+
+    /* HEADER */
+
+    .header {
+        margin-bottom: 30px;
+    }
+
+    .header h1 {
+        margin: 0 0 7px;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.6px;
+    }
+
+    .header p {
+        margin: 0;
+        font-size: 14px;
+        color: var(--muted);
+    }
+
+    /* INPUT SECTION */
+
+    .form {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px;
+    }
+
+    .field {
+        margin-bottom: 20px;
+    }
+
+    .field:last-of-type {
+        margin-bottom: 0;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .input {
+        position: relative;
+    }
+
+    .input span {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 13px;
+        font-weight: 600;
+        pointer-events: none;
+    }
+
+    input {
+        width: 100%;
+        height: 48px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        outline: none;
+
+        padding: 0 14px 0 40px;
+
+        background: #fff;
+        color: var(--text);
+
+        font-size: 16px;
+        font-weight: 600;
+
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    input::placeholder {
+        color: #c4c8ce;
+        font-weight: 400;
+    }
+
+    input:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, .08);
+    }
+
+    /* RESULT */
+
+    .result {
+        margin-top: 12px;
+        padding: 25px 22px;
+        background: var(--green-soft);
+        border: 1px solid #dcfce7;
+        border-radius: 14px;
+        text-align: center;
+    }
+
+    .result-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #65a374;
+        text-transform: uppercase;
+    }
+
+    .yield {
+        margin-top: 8px;
+        font-size: 52px;
+        line-height: 1;
+        font-weight: 750;
+        letter-spacing: -2px;
+        color: var(--green);
+    }
+
+    .calculation {
+        margin-top: 12px;
+        font-size: 12px;
+        color: #7b8c7e;
+    }
+
+    /* BUTTONS */
+
+    .actions {
+        display: flex;
+        gap: 9px;
+        margin-top: 20px;
+    }
+
+    button {
+        height: 46px;
+        border-radius: 9px;
+        border: 1px solid var(--border);
+
+        font-size: 13px;
+        font-weight: 600;
+
+        cursor: pointer;
+        transition: .15s;
+    }
+
+    .calculate {
+        flex: 1;
+        border-color: var(--green);
+        background: var(--green);
+        color: white;
+    }
+
+    .calculate:hover {
+        background: #15803d;
+        border-color: #15803d;
+    }
+
+    .clear {
+        width: 80px;
+        background: white;
+        color: #6b7280;
+    }
+
+    .clear:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+    }
+
+    /* FORMULA */
+
+    .formula {
+        margin-top: 18px;
+        text-align: center;
+        font-size: 12px;
+        color: #9ca3af;
+    }
+
+    .formula strong {
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    /* FOOTER */
+
+    .footer {
+        margin-top: 30px;
+        text-align: center;
+        font-size: 11px;
+        color: #b0b5bc;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 480px) {
+
+        body {
+            padding: 25px 16px;
+            align-items: flex-start;
+            padding-top: 70px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .form {
+            padding: 19px;
+        }
+
+        .yield {
+            font-size: 46px;
+        }
+    }
+</style>
+</head>
+
+
+<body>
+
+<div class="calculator">
+
+    <div class="header">
+        <h1>Dividend Yield</h1>
+        <p>Calculate the annual dividend yield of a stock.</p>
+    </div>
+
+
+    <div class="form">
+
+        <!-- DPS -->
+
+        <div class="field">
+
+            <label for="dps">
+                Dividend Per Share (DPS)
+            </label>
+
+            <div class="input">
+                <span>Rs</span>
+
+                <input
+                    id="dps"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.01"
+                    placeholder="50.00"
+                    oninput="calculateYield()"
+                >
+            </div>
+
+        </div>
+
+
+        <!-- PRICE -->
+
+        <div class="field">
+
+            <label for="price">
+                Share Price
+            </label>
+
+            <div class="input">
+                <span>Rs</span>
+
+                <input
+                    id="price"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.01"
+                    placeholder="535.00"
+                    oninput="calculateYield()"
+                >
+            </div>
+
+        </div>
+
+
+        <!-- RESULT -->
+
+        <div class="result">
+
+            <div class="result-label">
+                Dividend Yield
+            </div>
+
+            <div
+                class="yield"
+                id="yield">
+                0.00%
+            </div>
+
+            <div
+                class="calculation"
+                id="calculation">
+                Enter DPS and share price
+            </div>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="actions">
+
+            <button
+                class="clear"
+                onclick="clearCalculator()">
+                Clear
+            </button>
+
+            <button
+                class="calculate"
+                onclick="calculateYield()">
+                Calculate
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="formula">
+        DPS ÷ Share Price × 100
+        <strong>= Dividend Yield</strong>
+    </div>
+
+
+    <div class="footer">
+        Simple tool for dividend investors
+    </div>
+
+</div>
+
+
+<script>
+
+function calculateYield() {
+
+    const dps =
+        parseFloat(document.getElementById("dps").value);
+
+    const price =
+        parseFloat(document.getElementById("price").value);
+
+    const yieldElement =
+        document.getElementById("yield");
+
+    const calculation =
+        document.getElementById("calculation");
+
+
+    if (
+        isNaN(dps) ||
+        isNaN(price) ||
+        dps < 0 ||
+        price <= 0
+    ) {
+
+        yieldElement.textContent = "0.00%";
+
+        calculation.textContent =
+            "Enter DPS and share price";
+
+        return;
+    }
+
+
+    const dividendYield =
+        (dps / price) * 100;
+
+
+    yieldElement.textContent =
+        dividendYield.toFixed(2) + "%";
+
+
+    calculation.textContent =
+        `Rs ${dps.toFixed(2)} ÷ Rs ${price.toFixed(2)}`;
+}
+
+
+function clearCalculator() {
+
+    document.getElementById("dps").value = "";
+
+    document.getElementById("price").value = "";
+
+    document.getElementById("yield").textContent =
+        "0.00%";
+
+    document.getElementById("calculation").textContent =
+        "Enter DPS and share price";
+
+    document.getElementById("dps").focus();
+}
+
+</script>
+
+</body>
+</html>
