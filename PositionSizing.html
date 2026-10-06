@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Position Sizing Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+    font-size: 13px;
+  }
+  .container {
+    width: 100%;
+    max-width: 1100px;
+    height: 96vh;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 30px rgba(15,23,42,0.12);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-size: 18px;
+    color: #0ea5e9;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+  .header .subtitle {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  /* Main grid */
+  .main {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 14px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Inputs Panel */
+  .inputs-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .inputs-panel::-webkit-scrollbar { width: 4px; }
+  .inputs-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    color: #475569;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+  input, select {
+    width: 100%;
+    padding: 7px 10px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 7px;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    transition: 0.15s;
+  }
+  input:focus, select:focus {
+    border-color: #0ea5e9;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
+  }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* Trade Type toggle */
+  .trade-type-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .trade-type-toggle input[type="radio"] { display: none; }
+  .trade-type-toggle label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    transition: all 0.15s;
+    margin: 0;
+    color: #64748b;
+  }
+  .trade-type-toggle input:checked + label.buy-label {
+    background: #dcfce7;
+    border-color: #22c55e;
+    color: #15803d;
+  }
+  .trade-type-toggle input:checked + label.sell-label {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #b91c1c;
+  }
+
+  .calc-btn {
+    width: 100%;
+    padding: 11px;
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+    transition: 0.15s;
+  }
+  .calc-btn:hover {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(14,165,233,0.3);
+  }
+
+  .error, .warning {
+    border-radius: 7px;
+    padding: 8px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    display: none;
+    line-height: 1.35;
+  }
+  .error { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+  .warning { background: #fef3c7; color: #92400e; border-left: 3px solid #f59e0b; }
+  .error.show, .warning.show { display: block; }
+
+  /* Results Panel */
+  .results-panel {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .results-panel.show { display: flex; }
+
+  /* Big Banner */
+  .banner {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-weight: 900;
+    font-size: 17px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ffffff;
+  }
+  .banner.buy { background: linear-gradient(135deg, #16a34a, #22c55e); }
+  .banner.sell { background: linear-gradient(135deg, #dc2626, #ef4444); }
+  .banner .lot-highlight {
+    background: rgba(255,255,255,0.25);
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+  }
+
+  /* Cards Grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 10px 12px;
+    border: 1.5px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+  }
+  .card h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #0ea5e9;
+    font-weight: 800;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .card.loss h3 { color: #dc2626; }
+  .card.profit h3 { color: #16a34a; }
+
+  .kv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 12.5px;
+  }
+  .kv-row .k {
+    color: #64748b;
+    font-weight: 600;
+  }
+  .kv-row .v {
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  /* Highlighted values */
+  .v.hl-red {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 13px;
+  }
+  .v.hl-green {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 13px;
+  }
+  .v.hl-blue {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 13px;
+  }
+  .v.hl-yellow {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 13px;
+  }
+  .v.hl-grey {
+    background: #e2e8f0;
+    color: #334155;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 13px;
+  }
+
+  /* Risk Row - big highlight */
+  .risk-highlight {
+    background: #fef2f2;
+    border: 1.5px dashed #fca5a5;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .risk-highlight .k { color: #991b1b; font-size: 12px; font-weight: 700; }
+  .risk-highlight .v { color: #dc2626; font-size: 17px; font-weight: 900; }
+
+  /* TP Grid */
+  .tp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .tp-box {
+    background: #ffffff;
+    border-radius: 7px;
+    padding: 7px 8px;
+    border: 1.5px solid #e2e8f0;
+    text-align: center;
+  }
+  .tp-box .ratio {
+    font-size: 11px;
+    font-weight: 900;
+    color: #0ea5e9;
+    letter-spacing: 0.5px;
+  }
+  .tp-box .price {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    margin: 2px 0;
+  }
+  .tp-box .profit {
+    font-size: 14px;
+    color: #16a34a;
+    font-weight: 900;
+    background: #dcfce7;
+    border-radius: 4px;
+    padding: 2px 0;
+  }
+  .tp-box .pips {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .note-bottom {
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>📊 Position Sizing Calculator</h1>
+    <span class="subtitle">Risk • Lot • TP • SL — All in one</span>
+  </div>
+
+  <div class="main">
+    <!-- LEFT: INPUTS -->
+    <div class="inputs-panel">
+      <div class="form-group">
+        <label>Trade Type</label>
+        <div class="trade-type-toggle">
+          <input type="radio" name="tradeType" id="buy" value="BUY" checked>
+          <label for="buy" class="buy-label">▲ BUY</label>
+          <input type="radio" name="tradeType" id="sell" value="SELL">
+          <label for="sell" class="sell-label">▼ SELL</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Symbol</label>
+        <select id="symbol">
+          <option value="EURUSD">EURUSD (Forex Major)</option>
+          <option value="GBPUSD">GBPUSD (Forex Major)</option>
+          <option value="USDJPY">USDJPY (Forex Major)</option>
+          <option value="AUDUSD">AUDUSD (Forex Major)</option>
+          <option value="USDCAD">USDCAD (Forex Major)</option>
+          <option value="XAUUSD">XAUUSD (Gold)</option>
+          <option value="XAGUSD">XAGUSD (Silver)</option>
+          <option value="USOIL">USOIL (Crude Oil)</option>
+          <option value="BTCUSD">BTCUSD (Bitcoin)</option>
+          <option value="ETHUSD">ETHUSD (Ethereum)</option>
+          <option value="US30">US30 (Dow Jones)</option>
+          <option value="NAS100">NAS100 (Nasdaq)</option>
+        </select>
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label>Entry Price</label>
+          <input type="number" id="entry" step="any" placeholder="1.12000">
+        </div>
+        <div class="form-group">
+          <label>Stop Loss</label>
+          <input type="number" id="sl" step="any" placeholder="1.11800">
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label>Account ($)</label>
+          <input type="number" id="account" step="any" placeholder="1000">
+        </div>
+        <div class="form-group">
+          <label>Risk %</label>
+          <input type="number" id="risk" step="any" value="1">
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calculate()">🚀 CALCULATE</button>
+
+      <div class="error" id="error"></div>
+      <div class="warning" id="warning"></div>
+
+      <p class="note-bottom">Educational use only • Verify pip values with your broker</p>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div class="results-panel" id="results"></div>
+  </div>
+</div>
+
+<script>
+const SYMBOLS = {
+  EURUSD: { pipSize: 0.0001, pipValuePerLot: 10, digits: 5 },
+  GBPUSD: { pipSize: 0.0001, pipValuePerLot: 10, digits: 5 },
+  AUDUSD: { pipSize: 0.0001, pipValuePerLot: 10, digits: 5 },
+  USDCAD: { pipSize: 0.0001, pipValuePerLot: 10, digits: 5 },
+  USDJPY: { pipSize: 0.01,   pipValuePerLot: 9.1, digits: 3 },
+  XAUUSD: { pipSize: 0.01,   pipValuePerLot: 1,   digits: 2 },
+  XAGUSD: { pipSize: 0.001,  pipValuePerLot: 5,   digits: 3 },
+  USOIL:  { pipSize: 0.01,   pipValuePerLot: 10,  digits: 2 },
+  BTCUSD: { pipSize: 0.01,   pipValuePerLot: 1,   digits: 2 },
+  ETHUSD: { pipSize: 0.01,   pipValuePerLot: 1,   digits: 2 },
+  US30:   { pipSize: 0.1,    pipValuePerLot: 1,   digits: 1 },
+  NAS100: { pipSize: 0.1,    pipValuePerLot: 1,   digits: 1 }
+};
+
+function calculate() {
+  const symbolKey = document.getElementById('symbol').value;
+  const tradeType = document.querySelector('input[name="tradeType"]:checked').value;
+  const entry = parseFloat(document.getElementById('entry').value);
+  const sl = parseFloat(document.getElementById('sl').value);
+  const account = parseFloat(document.getElementById('account').value);
+  const riskPct = parseFloat(document.getElementById('risk').value);
+
+  const errorDiv = document.getElementById('error');
+  const warningDiv = document.getElementById('warning');
+  const resultsDiv = document.getElementById('results');
+
+  errorDiv.classList.remove('show');
+  warningDiv.classList.remove('show');
+  resultsDiv.classList.remove('show');
+
+  if (isNaN(entry) || isNaN(sl) || isNaN(account) || isNaN(riskPct)) {
+    return showError("⚠️ Tamam fields bharein. Koi field khali nahi honi chahiye.");
+  }
+  if (entry <= 0 || sl <= 0 || account <= 0 || riskPct <= 0) {
+    return showError("⚠️ Tamam values positive (0 se zyada) honi chahiye.");
+  }
+  if (entry === sl) {
+    return showError("⚠️ Entry aur SL same nahi ho sakte.");
+  }
+  if (riskPct > 10) {
+    return showError("⚠️ Risk 10% se zyada risky hai. 1-2% recommended hai.");
+  }
+
+  const isBuy = tradeType === "BUY";
+  if (isBuy && sl >= entry) {
+    return showError(`❌ BUY trade mein SL, Entry (${entry}) se NEECHE hona chahiye.`);
+  }
+  if (!isBuy && sl <= entry) {
+    return showError(`❌ SELL trade mein SL, Entry (${entry}) se UPAR hona chahiye.`);
+  }
+
+  const spec = SYMBOLS[symbolKey];
+  const pipSize = spec.pipSize;
+  const pipValuePerLot = spec.pipValuePerLot;
+
+  const slPips = Math.abs(entry - sl) / pipSize;
+  const riskAmount = account * (riskPct / 100);
+  const lotSizeRaw = riskAmount / (slPips * pipValuePerLot);
+  const lotSize = Math.floor(lotSizeRaw * 100) / 100;
+  const actualRisk = lotSize * slPips * pipValuePerLot;
+  const actualRiskPct = (actualRisk / account) * 100;
+
+  if (lotSize < 0.01) {
+    return showError(`⚠️ Account chhota hai. Minimum 0.01 lot ke liye $${(0.01 * slPips * pipValuePerLot).toFixed(2)} risk chahiye.`);
+  }
+
+  if (actualRiskPct > riskPct * 1.5) {
+    showWarning(`⚠️ Rounded lot se actual risk ${actualRiskPct.toFixed(2)}% ho gaya (planned: ${riskPct}%).`);
+  }
+
+  const ratios = [1, 1.5, 2, 3];
+  let tpHTML = '';
+  ratios.forEach(r => {
+    const tpPips = slPips * r;
+    const tpProfit = lotSize * tpPips * pipValuePerLot;
+    const tpPrice = isBuy ? entry + (tpPips * pipSize) : entry - (tpPips * pipSize);
+    tpHTML += `
+      <div class="tp-box">
+        <div class="ratio">1 : ${r}</div>
+        <div class="price">@ ${tpPrice.toFixed(spec.digits)}</div>
+        <div class="profit">+$${tpProfit.toFixed(2)}</div>
+        <div class="pips">${tpPips.toFixed(1)} pips</div>
+      </div>`;
+  });
+
+  const directionLabel = isBuy ? "▲ BUY (Long)" : "▼ SELL (Short)";
+  const bannerClass = isBuy ? "buy" : "sell";
+
+  resultsDiv.innerHTML = `
+    <div class="banner ${bannerClass}">
+      <span>${directionLabel}</span>
+      <span class="lot-highlight">LOT: ${lotSize.toFixed(2)}</span>
+    </div>
+
+    <div class="cards-grid">
+      <!-- Trade Summary -->
+      <div class="card">
+        <h3>📋 Trade Summary</h3>
+        <div class="kv-row"><span class="k">Symbol</span><span class="v hl-blue">${symbolKey}</span></div>
+        <div class="kv-row"><span class="k">Entry</span><span class="v hl-grey">${entry.toFixed(spec.digits)}</span></div>
+        <div class="kv-row"><span class="k">Stop Loss</span><span class="v hl-grey">${sl.toFixed(spec.digits)}</span></div>
+        <div class="kv-row"><span class="k">SL Distance</span><span class="v hl-yellow">${slPips.toFixed(1)} pips</span></div>
+        <div class="kv-row"><span class="k">Pip Size</span><span class="v">${pipSize}</span></div>
+        <div class="kv-row"><span class="k">Pip Value (1 lot)</span><span class="v">$${pipValuePerLot}</span></div>
+        <div class="kv-row"><span class="k">Loss per Pip</span><span class="v hl-red">$${(lotSize * pipValuePerLot).toFixed(2)}</span></div>
+      </div>
+
+      <!-- Risk Analysis -->
+      <div class="card loss">
+        <h3>🛑 Risk Analysis</h3>
+        <div class="kv-row"><span class="k">Account Size</span><span class="v">$${account.toFixed(2)}</span></div>
+        <div class="kv-row"><span class="k">Planned Risk</span><span class="v hl-yellow">${riskPct}%</span></div>
+        <div class="kv-row"><span class="k">SL Pips</span><span class="v hl-red">${slPips.toFixed(1)}</span></div>
+        <div class="risk-highlight">
+          <span class="k">💰 ACTUAL RISK (SL HIT)</span>
+          <span class="v">$${actualRisk.toFixed(2)}</span>
+        </div>
+        <div class="kv-row" style="margin-top:6px;"><span class="k">Actual Risk %</span><span class="v hl-red">${actualRiskPct.toFixed(2)}%</span></div>
+      </div>
+
+      <!-- TP Grid spanning both columns -->
+      <div class="card profit" style="grid-column: span 2;">
+        <h3>🎯 Take Profit Targets</h3>
+        <div class="tp-grid">
+          ${tpHTML}
+        </div>
+      </div>
+    </div>
+  `;
+
+  resultsDiv.classList.add('show');
+}
+
+function showError(msg) {
+  const e = document.getElementById('error');
+  e.textContent = msg;
+  e.classList.add('show');
+  document.getElementById('results').classList.remove('show');
+}
+
+function showWarning(msg) {
+  const w = document.getElementById('warning');
+  w.textContent = msg;
+  w.classList.add('show');
+}
+</script>
+
+</body>
+</html>
